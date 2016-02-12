@@ -1,0 +1,11 @@
+parameters:
+    sidus_eav_publishing.doctrine_orm.subscriber.class: Sidus\PublishingBundle\Event\ORMSubscriber
+    sidus_eav_publishing.data.publisher.class: Sidus\PublishingBundle\Publishing\Publisher
+
+services:
+    sidus_eav_publishing.doctrine_orm.subscriber:
+        class: %sidus_eav_publishing.doctrine_orm.subscriber.class%
+        arguments: [~]
+        tags:
+            - { name: doctrine.event_subscriber, connection: default }
+            - { name: kernel.event_listener, event: kernel.terminate, method: onKernelTerminate }
