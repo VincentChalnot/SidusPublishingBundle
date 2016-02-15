@@ -11,15 +11,22 @@ use Sidus\PublishingBundle\Publishing\PublisherInterface;
 class ORMSubscriber implements EventSubscriber
 {
     /** @var PublisherInterface[] */
-    protected $publishers;
+    protected $publishers = [];
 
     /** @var PublisherInterface[] */
     protected $activePublishers = [];
 
-    public function __construct(array $publishers)
+    /** @var bool */
+    protected $debug;
+
+    /**
+     * @param bool $debug
+     */
+    public function __construct($debug = false)
     {
-        $this->publishers = $publishers;
+        $this->debug = $debug;
     }
+
 
     public function getSubscribedEvents()
     {
@@ -53,6 +60,9 @@ class ORMSubscriber implements EventSubscriber
                 $this->activePublishers[] = $publisher;
             }
         }
+        if ($this->debug) {
+            $this->commit();
+        }
     }
 
     /**
@@ -70,16 +80,20 @@ class ORMSubscriber implements EventSubscriber
                 $this->activePublishers[] = $publisher;
             }
         }
+        if ($this->debug) {
+            $this->commit();
+        }
     }
 
     /**
-     * Push all entities on remote
+     * Push all entities on remote and reset publishers
      */
     public function commit()
     {
-        foreach ($this->activePublishers as $publisher) {
+        foreach ($this->activePublishers as $key => $publisher) {
             $publisher->push();
         }
+        $this->activePublishers = [];
     }
 
     /**
@@ -87,6 +101,24 @@ class ORMSubscriber implements EventSubscriber
      */
     public function onKernelTerminate()
     {
-        $this->commit();
+        if (!$this->debug) {
+            $this->commit();
+        }
+    }
+
+    /**
+     * @return PublisherInterface[]
+     */
+    public function getPublishers()
+    {
+        return $this->publishers;
+    }
+
+    /**
+     * @param PublisherInterface $publisher
+     */
+    public function addPublisher(PublisherInterface $publisher)
+    {
+        $this->publishers[] = $publisher;
     }
 }

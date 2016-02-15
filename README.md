@@ -1,0 +1,4 @@
+SidusPublishingBundle
+===========
+
+@todo

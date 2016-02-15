@@ -1,0 +1,32 @@
+{
+    "name": "sidus/publishing-bundle",
+    "description": "Publish your Doctrine entities (or any kind of PHP object) on different remote data consumers",
+    "keywords": [
+        "publish",
+        "publishing",
+        "doctrine"
+    ],
+    "homepage": "https://github.com/VincentChalnot/SidusPublishingBundle",
+    "type": "library",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Vincent Chalnot",
+            "email": "vincent@sidus.fr",
+            "homepage": "http://chalnot.fr",
+            "role": "Developer"
+        }
+    ],
+    "target-dir": "Sidus/PublishingBundle",
+    "autoload": {
+        "psr-0": {
+            "Sidus\\PublishingBundle": ""
+        }
+    },
+    "require": {
+        "php": ">=5.4",
+        "symfony/symfony": "~2.7.4|~2.8.1",
+        "doctrine/doctrine-bundle": "~1.4",
+        "jms/serializer-bundle": "~1.1"
+    }
+}

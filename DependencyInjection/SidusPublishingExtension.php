@@ -2,10 +2,13 @@
 
 namespace Sidus\PublishingBundle\DependencyInjection;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\DependencyInjection\Parameter;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
  * This is the class that loads and manages your bundle configuration
@@ -18,7 +21,9 @@ class SidusPublishingExtension extends Extension
     protected $globalConfiguration;
 
     /**
-     * {@inheritdoc}
+     * @param array $configs
+     * @param ContainerBuilder $container
+     * @throws \Exception
      */
     public function load(array $configs, ContainerBuilder $container)
     {
@@ -39,13 +44,45 @@ class SidusPublishingExtension extends Extension
         $loader->load('services.yml');
     }
 
-    protected function createPusherService($code, $pusherConfiguration, $container)
+    /**
+     * @param string $code
+     * @param array $pusherConfiguration
+     * @param ContainerBuilder $container
+     * @throws BadMethodCallException
+     */
+    protected function createPusherService($code, array $pusherConfiguration, ContainerBuilder $container)
     {
+        $definition = new Definition(new Parameter('sidus_eav_publishing.pusher.default.class'), [
+            $code,
+            $pusherConfiguration['url'],
+            $pusherConfiguration['options'],
+        ]);
+        $definition->addTag('sidus.pusher');
+        $sId = 'sidus_eav_publishing.pusher.'.$code;
+        $container->setDefinition($sId, $definition);
     }
 
 
-    protected function createPublisherService($code, $pusherConfiguration, $container)
+    /**
+     * @param string $code
+     * @param array $publisherConfiguration
+     * @param ContainerBuilder $container
+     * @throws BadMethodCallException
+     */
+    protected function createPublisherService($code, array $publisherConfiguration, ContainerBuilder $container)
     {
+        $options = array_merge(['queue' => $this->globalConfiguration['queue']], $publisherConfiguration['options']);
+        $definition = new Definition(new Parameter('sidus_eav_publishing.publisher.default.class'), [
+            $code,
+            $publisherConfiguration['entity'],
+            $publisherConfiguration['format'],
+            $publisherConfiguration['serializer'],
+            $publisherConfiguration['pushers'],
+            $options,
+        ]);
+        $definition->addTag('sidus.publisher');
+        $sId = 'sidus_eav_publishing.publisher.'.$code;
+        $container->setDefinition($sId, $definition);
     }
 
     /**

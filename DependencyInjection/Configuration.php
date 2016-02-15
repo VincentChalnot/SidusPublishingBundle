@@ -36,9 +36,9 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root($this->root);
         $rootNode
             ->children()
-                ->append($this->getQueueTreeBuilder())
-                ->append($this->getPushersTreeBuilder())
-                ->append($this->getPublishersTreeBuilder())
+            ->append($this->getQueueTreeBuilder())
+            ->append($this->getPushersTreeBuilder())
+            ->append($this->getPublishersTreeBuilder())
             ->end();
 
         return $treeBuilder;
@@ -54,9 +54,9 @@ class Configuration implements ConfigurationInterface
         $node = $builder->root('queue');
         $node
             ->children()
-                ->scalarNode('base_directory')->isRequired()->end()
-                ->integerNode('override_timeout')->defaultValue(120)->end()
-                ->scalarNode('lockfile')->defaultValue('.lock')->end()
+            ->scalarNode('base_directory')->isRequired()->end()
+            ->integerNode('override_timeout')->defaultValue(120)->end()
+            ->scalarNode('lockfile')->defaultValue('.lock')->end()
             ->end();
         return $node;
     }
@@ -72,13 +72,13 @@ class Configuration implements ConfigurationInterface
         $dataGridDefinition = $node
             ->useAttributeAsKey('code')
             ->prototype('array')
-                ->performNoDeepMerging()
-                ->children();
+            ->performNoDeepMerging()
+            ->children();
 
         $this->appendPusherDefinition($dataGridDefinition);
 
         $dataGridDefinition->end()
-                ->end()
+            ->end()
             ->end();
         return $node;
     }
@@ -91,7 +91,6 @@ class Configuration implements ConfigurationInterface
         $dataGridDefinition
             ->scalarNode('url')->defaultNull()->end()
             ->scalarNode('class')->defaultValue(new Parameter('sidus_eav_publishing.pusher.generic'))->end()
-            ->scalarNode('directory')->defaultNull()->end()
             ->variableNode('options')->defaultValue([])->end();
     }
 
@@ -106,13 +105,13 @@ class Configuration implements ConfigurationInterface
         $dataGridDefinition = $node
             ->useAttributeAsKey('code')
             ->prototype('array')
-                ->performNoDeepMerging()
-                ->children();
+            ->performNoDeepMerging()
+            ->children();
 
         $this->appendPublisherDefinition($dataGridDefinition);
 
         $dataGridDefinition->end()
-                ->end()
+            ->end()
             ->end();
         return $node;
     }
