@@ -42,7 +42,19 @@ class ORMSubscriber implements EventSubscriber
      */
     public function postPersist(LifecycleEventArgs $args)
     {
-        $this->postUpdate($args);
+        $entity = $args->getObject();
+        if (!$entity instanceof PublishableInterface) {
+            return;
+        }
+        foreach ($this->publishers as $publisher) {
+            if ($publisher->isSupported($entity)) {
+                $publisher->create($entity);
+                $this->activePublishers[] = $publisher;
+            }
+        }
+        if ($this->debug) {
+            $this->commit();
+        }
     }
 
     /**
@@ -91,7 +103,7 @@ class ORMSubscriber implements EventSubscriber
     public function commit()
     {
         foreach ($this->activePublishers as $key => $publisher) {
-            $publisher->push();
+            $publisher->publish();
         }
         $this->activePublishers = [];
     }

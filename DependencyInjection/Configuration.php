@@ -37,7 +37,6 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
             ->append($this->getQueueTreeBuilder())
-            ->append($this->getPushersTreeBuilder())
             ->append($this->getPublishersTreeBuilder())
             ->end();
 
@@ -59,39 +58,6 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('lockfile')->defaultValue('.lock')->end()
             ->end();
         return $node;
-    }
-
-    /**
-     * @return NodeDefinition
-     * @throws \RuntimeException
-     */
-    protected function getPushersTreeBuilder()
-    {
-        $builder = new TreeBuilder();
-        $node = $builder->root('pushers');
-        $dataGridDefinition = $node
-            ->useAttributeAsKey('code')
-            ->prototype('array')
-            ->performNoDeepMerging()
-            ->children();
-
-        $this->appendPusherDefinition($dataGridDefinition);
-
-        $dataGridDefinition->end()
-            ->end()
-            ->end();
-        return $node;
-    }
-
-    /**
-     * @param NodeBuilder $dataGridDefinition
-     */
-    protected function appendPusherDefinition(NodeBuilder $dataGridDefinition)
-    {
-        $dataGridDefinition
-            ->scalarNode('url')->defaultNull()->end()
-            ->scalarNode('class')->defaultValue(new Parameter('sidus_eav_publishing.pusher.generic'))->end()
-            ->variableNode('options')->defaultValue([])->end();
     }
 
     /**
@@ -126,7 +92,9 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('format')->isRequired()->end()
             ->scalarNode('class')->defaultValue(new Parameter('sidus_eav_publishing.publisher.generic'))->end()
             ->scalarNode('serializer')->defaultValue(new Reference('serializer'))->end()
-            ->scalarNode('pushers')->defaultValue([])->end()
+            ->arrayNode('pushers')
+                ->prototype('scalar')->end()
+            ->end()
             ->variableNode('options')->defaultValue([])->end();
     }
 }

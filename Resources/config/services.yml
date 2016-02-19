@@ -1,7 +1,7 @@
 parameters:
     sidus_eav_publishing.doctrine_orm.subscriber.class: Sidus\PublishingBundle\Event\ORMSubscriber
     sidus_eav_publishing.publisher.default.class: Sidus\PublishingBundle\Publishing\Publisher
-    sidus_eav_publishing.pusher.default.class: Sidus\PublishingBundle\Publishing\Pusher
+    sidus_eav_publishing.pusher.rest.class: Sidus\PublishingBundle\Publishing\RestPusher
 
 services:
     sidus_eav_publishing.doctrine_orm.subscriber:

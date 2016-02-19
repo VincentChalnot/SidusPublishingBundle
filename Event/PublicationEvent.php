@@ -7,26 +7,28 @@ use Sidus\PublishingBundle\Entity\PublishableInterface;
 
 class PublicationEvent
 {
+    const CREATE = 'create';
     const UPDATE = 'update';
     const REMOVE = 'remove';
 
     /** @var PublishableInterface */
-    public $entity;
+    public $data;
 
     /** @var string */
     public $event;
 
-    public $publicationUUID;
+    /** @var string */
+    public $publicationID;
 
     /**
      * PublicationEvent constructor.
-     * @param PublishableInterface $entity
+     * @param PublishableInterface $data
      * @param string $event
      */
-    public function __construct(PublishableInterface $entity, $event)
+    public function __construct(PublishableInterface $data, $event)
     {
-        $this->entity = $entity;
+        $this->data = $data;
         $this->event = $event;
-        $this->publicationUUID = $entity->getPublicationUUID();
+        $this->publicationId = $data->getPublicationId();
     }
 }

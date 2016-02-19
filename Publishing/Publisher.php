@@ -15,7 +15,7 @@ class Publisher implements PublisherInterface
     protected $code;
 
     /** @var string */
-    protected $entity;
+    protected $entityName;
 
     /** @var string */
     protected $format;
@@ -34,7 +34,7 @@ class Publisher implements PublisherInterface
 
     /**
      * @param string $code
-     * @param string $entity
+     * @param string $entityName
      * @param string $format
      * @param SerializerInterface $serializer
      * @param PusherInterface[] $pushers
@@ -43,14 +43,14 @@ class Publisher implements PublisherInterface
      */
     public function __construct(
         $code,
-        $entity,
+        $entityName,
         $format,
         SerializerInterface $serializer,
         array $pushers,
         array $options = []
     ) {
         $this->code = $code;
-        $this->entity = $entity;
+        $this->entityName = $entityName;
         $this->format = $format;
         $this->serializer = $serializer;
         $this->pushers = $pushers;
@@ -66,9 +66,32 @@ class Publisher implements PublisherInterface
      * @throws FileException
      * @throws AccessDeniedException
      */
+    public function create(PublishableInterface $entity)
+    {
+        $this->handlePublication($entity, PublicationEvent::CREATE);
+    }
+
+    /**
+     * @param PublishableInterface $entity
+     * @throws FileException
+     * @throws AccessDeniedException
+     */
     public function update(PublishableInterface $entity)
     {
-        $event = new PublicationEvent($entity, PublicationEvent::UPDATE);
+        $this->handlePublication($entity, PublicationEvent::UPDATE);
+    }
+
+    /**
+     * @param PublishableInterface $entity
+     */
+    public function remove(PublishableInterface $entity)
+    {
+        $this->handlePublication($entity, PublicationEvent::REMOVE);
+    }
+
+    protected function handlePublication(PublishableInterface $entity, $eventName)
+    {
+        $event = new PublicationEvent($entity, $eventName);
         $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
         $f = $this->getFileName($event);
         if (false === file_put_contents($f, $serialized)) {
@@ -77,17 +100,9 @@ class Publisher implements PublisherInterface
     }
 
     /**
-     * @param PublishableInterface $entity
-     */
-    public function remove(PublishableInterface $entity)
-    {
-        // TODO: Implement remove() method.
-    }
-
-    /**
      * @return bool
      */
-    public function push()
+    public function publish()
     {
         // TODO: Implement push() method.
     }
@@ -98,7 +113,7 @@ class Publisher implements PublisherInterface
      */
     public function isSupported($entity)
     {
-        return is_a($entity, $this->entity);
+        return is_a($entity, $this->getEntityName());
     }
 
     /**
@@ -112,9 +127,9 @@ class Publisher implements PublisherInterface
     /**
      * @return string
      */
-    public function getEntity()
+    public function getEntityName()
     {
-        return $this->entity;
+        return $this->entityName;
     }
 
     /**
@@ -156,7 +171,7 @@ class Publisher implements PublisherInterface
      */
     protected function getFileName(PublicationEvent $event)
     {
-        return "{$this->getBaseDirectory()}/{$event->publicationUUID}.{$this->getFormat()}";
+        return "{$this->getBaseDirectory()}/{$event->publicationId}.{$this->getFormat()}";
     }
 
     /**

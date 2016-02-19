@@ -32,10 +32,6 @@ class SidusPublishingExtension extends Extension
 
         $container->setParameter('sidus_eav_publishing.queue.configuration', $this->globalConfiguration['queue']);
 
-        foreach ($this->globalConfiguration['pushers'] as $code => $pusherConfiguration) {
-            $this->createPusherService($code, $pusherConfiguration, $container);
-        }
-
         foreach ($this->globalConfiguration['publishers'] as $code => $publisherConfiguration) {
             $this->createPublisherService($code, $publisherConfiguration, $container);
         }
@@ -43,25 +39,6 @@ class SidusPublishingExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
     }
-
-    /**
-     * @param string $code
-     * @param array $pusherConfiguration
-     * @param ContainerBuilder $container
-     * @throws BadMethodCallException
-     */
-    protected function createPusherService($code, array $pusherConfiguration, ContainerBuilder $container)
-    {
-        $definition = new Definition(new Parameter('sidus_eav_publishing.pusher.default.class'), [
-            $code,
-            $pusherConfiguration['url'],
-            $pusherConfiguration['options'],
-        ]);
-        $definition->addTag('sidus.pusher');
-        $sId = 'sidus_eav_publishing.pusher.'.$code;
-        $container->setDefinition($sId, $definition);
-    }
-
 
     /**
      * @param string $code

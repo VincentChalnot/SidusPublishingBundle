@@ -10,6 +10,11 @@ interface PublisherInterface
     /**
      * @param PublishableInterface $entity
      */
+    public function create(PublishableInterface $entity);
+
+    /**
+     * @param PublishableInterface $entity
+     */
     public function update(PublishableInterface $entity);
 
     /**
@@ -20,7 +25,7 @@ interface PublisherInterface
     /**
      * @return bool
      */
-    public function push();
+    public function publish();
 
     /**
      * @param PublishableInterface $entity

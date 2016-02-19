@@ -9,5 +9,18 @@ interface PusherInterface
      * @param mixed $data
      * @return bool
      */
-    public function push($data);
+    public function post($data);
+
+    /**
+     * @param string $publicationId
+     * @param mixed $data
+     * @return bool
+     */
+    public function put($publicationId, $data);
+
+    /**
+     * @param string $publicationId
+     * @return bool
+     */
+    public function delete($publicationId);
 }
