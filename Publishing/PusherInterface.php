@@ -12,15 +12,15 @@ interface PusherInterface
     public function post($data);
 
     /**
-     * @param string $publicationId
+     * @param string $publicationUuid
      * @param mixed $data
      * @return bool
      */
-    public function put($publicationId, $data);
+    public function put($publicationUuid, $data);
 
     /**
-     * @param string $publicationId
+     * @param string $publicationUuid
      * @return bool
      */
-    public function delete($publicationId);
+    public function delete($publicationUuid);
 }

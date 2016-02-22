@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\DependencyInjection\Parameter;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
@@ -49,12 +50,16 @@ class SidusPublishingExtension extends Extension
     protected function createPublisherService($code, array $publisherConfiguration, ContainerBuilder $container)
     {
         $options = array_merge(['queue' => $this->globalConfiguration['queue']], $publisherConfiguration['options']);
+        $pushers = [];
+        foreach ($publisherConfiguration['pushers'] as $pusher) {
+            $pushers[] = new Reference(ltrim($pusher, '@'));
+        }
         $definition = new Definition(new Parameter('sidus_eav_publishing.publisher.default.class'), [
             $code,
             $publisherConfiguration['entity'],
             $publisherConfiguration['format'],
             $publisherConfiguration['serializer'],
-            $publisherConfiguration['pushers'],
+            $pushers,
             $options,
         ]);
         $definition->addTag('sidus.publisher');

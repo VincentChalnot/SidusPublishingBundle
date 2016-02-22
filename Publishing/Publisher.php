@@ -5,7 +5,9 @@ namespace Sidus\PublishingBundle\Publishing;
 use JMS\Serializer\SerializerInterface;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 use Sidus\PublishingBundle\Event\PublicationEvent;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use UnexpectedValueException;
 
@@ -104,7 +106,33 @@ class Publisher implements PublisherInterface
      */
     public function publish()
     {
-        // TODO: Implement push() method.
+        foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::REMOVE] as $eventType) {
+            $finder = new Finder();
+            /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
+            $files = $finder->in($this->getBaseDirectory($eventType))->name('*.' . $this->format)->sortByModifiedTime()->files();
+            foreach ($files as $file) {
+                foreach ($this->getPushers() as $pusher) {
+                    $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
+                    if ($eventType === PublicationEvent::CREATE) {
+                        if (!$pusher->post($file->getContents())) {
+                            return false;
+                        }
+                    }
+                    if ($eventType === PublicationEvent::UPDATE) {
+                        if (!$pusher->put($publicationUuid, $file->getContents())) {
+                            return false;
+                        }
+                    }
+                    if ($eventType === PublicationEvent::CREATE) {
+                        if (!$pusher->delete($publicationUuid)) {
+                            return false;
+                        }
+                    }
+                    unlink($file->getRealPath());
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -171,16 +199,20 @@ class Publisher implements PublisherInterface
      */
     protected function getFileName(PublicationEvent $event)
     {
-        return "{$this->getBaseDirectory()}/{$event->publicationId}.{$this->getFormat()}";
+        return "{$this->getBaseDirectory($event->event)}/{$event->publicationUuid}.{$this->getFormat()}";
     }
 
     /**
+     * @param string $eventType
      * @return string
      * @throws AccessDeniedException
      */
-    protected function getBaseDirectory()
+    protected function getBaseDirectory($eventType = null)
     {
         $directory = rtrim($this->queueDirectory, '/').'/'.$this->getCode();
+        if ($eventType) {
+            $directory .= '/' . $eventType;
+        }
         if (!@mkdir($directory, 0777, true) && !is_dir($directory)) {
             throw new AccessDeniedException("Unable to create base directory {$directory}");
         }

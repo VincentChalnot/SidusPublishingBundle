@@ -55,16 +55,16 @@ class RestPusher implements PusherInterface
     /**
      * @inheritDoc
      */
-    public function put($publicationId, $data)
+    public function put($publicationUuid, $data)
     {
-        return $this->restClient->put($this->url, $data, $this->options);
+        return $this->restClient->put($this->url . '/' . $publicationUuid, $data, $this->options);
     }
 
     /**
      * @inheritDoc
      */
-    public function delete($publicationId)
+    public function delete($publicationUuid)
     {
-        return $this->restClient->delete($this->url, $this->options);
+        return $this->restClient->delete($this->url . '/' . $publicationUuid, $this->options);
     }
 }

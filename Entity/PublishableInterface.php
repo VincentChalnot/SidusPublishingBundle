@@ -8,5 +8,5 @@ interface PublishableInterface
     /**
      * @return string
      */
-    public function getPublicationId();
+    public function getPublicationUuid();
 }

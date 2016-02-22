@@ -29,6 +29,6 @@ class PublicationEvent
     {
         $this->data = $data;
         $this->event = $event;
-        $this->publicationId = $data->getPublicationId();
+        $this->publicationUuid = $data->getPublicationUuid();
     }
 }
