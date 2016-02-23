@@ -36,8 +36,9 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root($this->root);
         $rootNode
             ->children()
-            ->append($this->getQueueTreeBuilder())
-            ->append($this->getPublishersTreeBuilder())
+                ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end()
+                ->append($this->getQueueTreeBuilder())
+                ->append($this->getPublishersTreeBuilder())
             ->end();
 
         return $treeBuilder;
@@ -53,9 +54,9 @@ class Configuration implements ConfigurationInterface
         $node = $builder->root('queue');
         $node
             ->children()
-            ->scalarNode('base_directory')->isRequired()->end()
-            ->integerNode('override_timeout')->defaultValue(120)->end()
-            ->scalarNode('lockfile')->defaultValue('.lock')->end()
+                ->scalarNode('base_directory')->isRequired()->end()
+                ->integerNode('override_timeout')->defaultValue(120)->end()
+                ->scalarNode('lockfile')->defaultValue('.lock')->end()
             ->end();
         return $node;
     }

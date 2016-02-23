@@ -3,6 +3,8 @@
 namespace Sidus\PublishingBundle\Publishing;
 
 use Circle\RestClientBundle\Services\RestClient;
+use Sidus\PublishingBundle\Exception\PublicationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class RestPusher implements PusherInterface
 {
@@ -46,25 +48,50 @@ class RestPusher implements PusherInterface
 
     /**
      * @inheritDoc
+     * @throws PublicationException
      */
-    public function post($data)
+    public function create($publicationUuid, $data)
     {
-        return $this->restClient->post($this->url, $data, $this->options);
+        $response = $this->restClient->post($this->url, $data, $this->options);
+        $this->checkError($response, 'POST');
     }
 
     /**
      * @inheritDoc
+     * @throws PublicationException
      */
-    public function put($publicationUuid, $data)
+    public function update($publicationUuid, $data)
     {
-        return $this->restClient->put($this->url . '/' . $publicationUuid, $data, $this->options);
+        $url = $this->url . '/' . $publicationUuid;
+        $response = $this->restClient->put($url, $data, $this->options);
+        $this->checkError($response, 'PUT', $url);
     }
 
     /**
      * @inheritDoc
+     * @throws PublicationException
      */
-    public function delete($publicationUuid)
+    public function delete($publicationUuid, $data)
     {
-        return $this->restClient->delete($this->url . '/' . $publicationUuid, $this->options);
+        $url = $this->url . '/' . $publicationUuid;
+        $response = $this->restClient->delete($url, $this->options);
+        $this->checkError($response, 'DELETE', $url);
+    }
+
+    /**
+     * @param Response $response
+     * @param string $method
+     * @param string $url
+     * @throws PublicationException
+     */
+    protected function checkError(Response $response, $method, $url = null)
+    {
+        if ($response->getStatusCode() === Response::HTTP_OK) {
+            return;
+        }
+        if (null === $url) {
+            $url = $this->url;
+        }
+        throw new PublicationException("Failed to send ({$method}) data to {$url}", $response->getStatusCode(), $response);
     }
 }

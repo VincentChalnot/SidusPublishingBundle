@@ -5,7 +5,7 @@ namespace Sidus\PublishingBundle\Publishing;
 use JMS\Serializer\SerializerInterface;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 use Sidus\PublishingBundle\Event\PublicationEvent;
-use Symfony\Component\Filesystem\Filesystem;
+use Sidus\PublishingBundle\Exception\PublicationException;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -34,6 +34,9 @@ class Publisher implements PublisherInterface
     /** @var string */
     protected $queueDirectory;
 
+    /** @var string */
+    protected $publicationEventClass;
+
     /**
      * @param string $code
      * @param string $entityName
@@ -61,6 +64,10 @@ class Publisher implements PublisherInterface
             throw new UnexpectedValueException('The queue.directory option must be set');
         }
         $this->queueDirectory = $options['queue']['base_directory'];
+        if (!isset($options['publication_event_class'])) {
+            throw new UnexpectedValueException('The publication_event_class option must be set');
+        }
+        $this->publicationEventClass = $options['publication_event_class'];
     }
 
     /**
@@ -93,7 +100,7 @@ class Publisher implements PublisherInterface
 
     protected function handlePublication(PublishableInterface $entity, $eventName)
     {
-        $event = new PublicationEvent($entity, $eventName);
+        $event = new $this->publicationEventClass($entity, $eventName);
         $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
         $f = $this->getFileName($event);
         if (false === file_put_contents($f, $serialized)) {
@@ -103,32 +110,34 @@ class Publisher implements PublisherInterface
 
     /**
      * @return bool
+     * @throws \Exception
      */
     public function publish()
     {
         foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::REMOVE] as $eventType) {
             $finder = new Finder();
             /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
-            $files = $finder->in($this->getBaseDirectory($eventType))->name('*.' . $this->format)->sortByModifiedTime()->files();
+            $files = $finder
+                ->in($this->getBaseDirectory($eventType))
+                ->name('*.' . $this->format)
+                ->sortByModifiedTime()
+                ->files();
             foreach ($files as $file) {
                 foreach ($this->getPushers() as $pusher) {
                     $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
-                    if ($eventType === PublicationEvent::CREATE) {
-                        if (!$pusher->post($file->getContents())) {
-                            return false;
-                        }
-                    }
-                    if ($eventType === PublicationEvent::UPDATE) {
-                        if (!$pusher->put($publicationUuid, $file->getContents())) {
-                            return false;
-                        }
-                    }
-                    if ($eventType === PublicationEvent::CREATE) {
-                        if (!$pusher->delete($publicationUuid)) {
-                            return false;
+                    $errorFilePath = "{$this->getBaseDirectory('error')}/{$publicationUuid}.{$this->getFormat()}";
+                    try {
+                        $pusher->$eventType($publicationUuid, $file->getContents());
+                    } catch (PublicationException $e) {
+                        $r = $e->getResponse();
+                        if ($r && $r->getContent()) {
+                            file_put_contents($errorFilePath, $r->getContent());
+                            $e->addMessage("Check {$errorFilePath} for more informations");
+                            throw $e;
                         }
                     }
                     unlink($file->getRealPath());
+                    unlink($errorFilePath);
                 }
             }
         }

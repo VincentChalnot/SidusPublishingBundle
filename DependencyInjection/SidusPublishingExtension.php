@@ -49,7 +49,11 @@ class SidusPublishingExtension extends Extension
      */
     protected function createPublisherService($code, array $publisherConfiguration, ContainerBuilder $container)
     {
-        $options = array_merge(['queue' => $this->globalConfiguration['queue']], $publisherConfiguration['options']);
+        $defaultpOptions = [
+            'queue' => $this->globalConfiguration['queue'],
+            'publication_event_class' => $this->globalConfiguration['publication_event_class'],
+        ];
+        $options = array_merge($defaultpOptions, $publisherConfiguration['options']);
         $pushers = [];
         foreach ($publisherConfiguration['pushers'] as $pusher) {
             $pushers[] = new Reference(ltrim($pusher, '@'));

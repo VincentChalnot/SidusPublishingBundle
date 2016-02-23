@@ -6,21 +6,20 @@ namespace Sidus\PublishingBundle\Publishing;
 interface PusherInterface
 {
     /**
+     * @param $publicationUuid
      * @param mixed $data
-     * @return bool
      */
-    public function post($data);
+    public function create($publicationUuid, $data);
 
     /**
      * @param string $publicationUuid
      * @param mixed $data
-     * @return bool
      */
-    public function put($publicationUuid, $data);
+    public function update($publicationUuid, $data);
 
     /**
      * @param string $publicationUuid
-     * @return bool
+     * @param mixed $data
      */
-    public function delete($publicationUuid);
+    public function delete($publicationUuid, $data);
 }

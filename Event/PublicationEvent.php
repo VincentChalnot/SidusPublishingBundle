@@ -18,7 +18,7 @@ class PublicationEvent
     public $event;
 
     /** @var string */
-    public $publicationID;
+    public $publicationUuid;
 
     /**
      * PublicationEvent constructor.
