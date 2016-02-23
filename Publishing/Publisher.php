@@ -137,7 +137,9 @@ class Publisher implements PublisherInterface
                         }
                     }
                     unlink($file->getRealPath());
-                    unlink($errorFilePath);
+                    if (file_exists($errorFilePath)) {
+                        unlink($errorFilePath);
+                    }
                 }
             }
         }
