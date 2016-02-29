@@ -93,9 +93,9 @@ class Publisher implements PublisherInterface
     /**
      * @param PublishableInterface $entity
      */
-    public function remove(PublishableInterface $entity)
+    public function delete(PublishableInterface $entity)
     {
-        $this->handlePublication($entity, PublicationEvent::REMOVE);
+        $this->handlePublication($entity, PublicationEvent::DELETE);
     }
 
     protected function handlePublication(PublishableInterface $entity, $eventName)
@@ -114,7 +114,7 @@ class Publisher implements PublisherInterface
      */
     public function publish()
     {
-        foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::REMOVE] as $eventType) {
+        foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::DELETE] as $eventType) {
             $finder = new Finder();
             /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
             $files = $finder

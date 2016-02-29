@@ -20,7 +20,7 @@ interface PublisherInterface
     /**
      * @param PublishableInterface $entity
      */
-    public function remove(PublishableInterface $entity);
+    public function delete(PublishableInterface $entity);
 
     /**
      * @return bool

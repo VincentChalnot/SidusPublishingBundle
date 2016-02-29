@@ -88,7 +88,7 @@ class ORMSubscriber implements EventSubscriber
         }
         foreach ($this->publishers as $publisher) {
             if ($publisher->isSupported($entity)) {
-                $publisher->remove($entity);
+                $publisher->delete($entity);
                 $this->activePublishers[] = $publisher;
             }
         }

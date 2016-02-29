@@ -9,7 +9,7 @@ class PublicationEvent
 {
     const CREATE = 'create';
     const UPDATE = 'update';
-    const REMOVE = 'remove';
+    const DELETE = 'delete';
 
     /** @var PublishableInterface */
     public $data;
