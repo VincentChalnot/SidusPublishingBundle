@@ -19,6 +19,9 @@ class ORMSubscriber implements EventSubscriber
     /** @var bool */
     protected $debug;
 
+    /** @var bool */
+    protected $disabled = false;
+
     /**
      * @param bool $debug
      */
@@ -30,6 +33,9 @@ class ORMSubscriber implements EventSubscriber
 
     public function getSubscribedEvents()
     {
+        if ($this->disabled) {
+            return [];
+        }
         return [
             Events::postPersist,
             Events::postUpdate,
@@ -42,6 +48,9 @@ class ORMSubscriber implements EventSubscriber
      */
     public function postPersist(LifecycleEventArgs $args)
     {
+        if ($this->disabled) {
+            return;
+        }
         $entity = $args->getObject();
         if (!$entity instanceof PublishableInterface) {
             return;
@@ -62,6 +71,9 @@ class ORMSubscriber implements EventSubscriber
      */
     public function postUpdate(LifecycleEventArgs $args)
     {
+        if ($this->disabled) {
+            return;
+        }
         $entity = $args->getObject();
         if (!$entity instanceof PublishableInterface) {
             return;
@@ -82,6 +94,9 @@ class ORMSubscriber implements EventSubscriber
      */
     public function postRemove(LifecycleEventArgs $args)
     {
+        if ($this->disabled) {
+            return;
+        }
         $entity = $args->getObject();
         if (!$entity instanceof PublishableInterface) {
             return;
@@ -102,6 +117,9 @@ class ORMSubscriber implements EventSubscriber
      */
     public function commit()
     {
+        if ($this->disabled) {
+            return;
+        }
         foreach ($this->activePublishers as $key => $publisher) {
             $publisher->publish();
         }
@@ -132,5 +150,21 @@ class ORMSubscriber implements EventSubscriber
     public function addPublisher(PublisherInterface $publisher)
     {
         $this->publishers[] = $publisher;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isDisabled()
+    {
+        return $this->disabled;
+    }
+
+    /**
+     * @param boolean $disabled
+     */
+    public function setDisabled($disabled)
+    {
+        $this->disabled = $disabled;
     }
 }
