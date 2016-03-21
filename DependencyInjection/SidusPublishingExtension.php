@@ -50,6 +50,7 @@ class SidusPublishingExtension extends Extension
     protected function createPublisherService($code, array $publisherConfiguration, ContainerBuilder $container)
     {
         $defaultpOptions = [
+            'enabled' => $this->globalConfiguration['enabled'],
             'queue' => $this->globalConfiguration['queue'],
             'publication_event_class' => $this->globalConfiguration['publication_event_class'],
         ];

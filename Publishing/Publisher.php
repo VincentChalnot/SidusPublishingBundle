@@ -37,6 +37,9 @@ class Publisher implements PublisherInterface
     /** @var string */
     protected $publicationEventClass;
 
+    /** @var bool */
+    protected $enabled;
+
     /**
      * @param string $code
      * @param string $entityName
@@ -68,6 +71,7 @@ class Publisher implements PublisherInterface
             throw new UnexpectedValueException('The publication_event_class option must be set');
         }
         $this->publicationEventClass = $options['publication_event_class'];
+        $this->enabled = (bool) $this->options['enabled'];
     }
 
     /**
@@ -100,6 +104,9 @@ class Publisher implements PublisherInterface
 
     protected function handlePublication(PublishableInterface $entity, $eventName)
     {
+        if (!$this->enabled) {
+            return;
+        }
         $event = new $this->publicationEventClass($entity, $eventName);
         $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
         $f = $this->getFileName($event);
@@ -114,6 +121,9 @@ class Publisher implements PublisherInterface
      */
     public function publish()
     {
+        if (!$this->enabled) {
+            return false;
+        }
         foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::DELETE] as $eventType) {
             $finder = new Finder();
             /** @var \Symfony\Component\Finder\SplFileInfo[] $files */

@@ -36,6 +36,7 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root($this->root);
         $rootNode
             ->children()
+                ->booleanNode('enabled')->defaultTrue()->end()
                 ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end()
                 ->append($this->getQueueTreeBuilder())
                 ->append($this->getPublishersTreeBuilder())
