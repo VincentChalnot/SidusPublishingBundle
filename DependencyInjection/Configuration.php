@@ -36,10 +36,10 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root($this->root);
         $rootNode
             ->children()
-                ->booleanNode('enabled')->defaultTrue()->end()
-                ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end()
-                ->append($this->getQueueTreeBuilder())
-                ->append($this->getPublishersTreeBuilder())
+            ->booleanNode('enabled')->defaultTrue()->end()
+            ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end()
+            ->append($this->getQueueTreeBuilder())
+            ->append($this->getPublishersTreeBuilder())
             ->end();
 
         return $treeBuilder;
@@ -55,10 +55,11 @@ class Configuration implements ConfigurationInterface
         $node = $builder->root('queue');
         $node
             ->children()
-                ->scalarNode('base_directory')->isRequired()->end()
-                ->integerNode('override_timeout')->defaultValue(120)->end()
-                ->scalarNode('lockfile')->defaultValue('.lock')->end()
+            ->scalarNode('base_directory')->isRequired()->end()
+            ->integerNode('override_timeout')->defaultValue(120)->end()
+            ->scalarNode('lockfile')->defaultValue('.lock')->end()
             ->end();
+
         return $node;
     }
 
@@ -81,6 +82,7 @@ class Configuration implements ConfigurationInterface
         $dataGridDefinition->end()
             ->end()
             ->end();
+
         return $node;
     }
 
@@ -95,7 +97,7 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('class')->defaultValue(new Parameter('sidus_eav_publishing.publisher.generic'))->end()
             ->scalarNode('serializer')->defaultValue(new Reference('serializer'))->end()
             ->arrayNode('pushers')
-                ->prototype('scalar')->end()
+            ->prototype('scalar')->end()
             ->end()
             ->variableNode('options')->defaultValue([])->end();
     }

@@ -2,9 +2,13 @@
 
 namespace Sidus\PublishingBundle\Event;
 
-
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 
+/**
+ * Instantiated during the publication of an entity
+ *
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 class PublicationEvent
 {
     const CREATE = 'create';
@@ -22,8 +26,9 @@ class PublicationEvent
 
     /**
      * PublicationEvent constructor.
+     *
      * @param PublishableInterface $data
-     * @param string $event
+     * @param string               $event
      */
     public function __construct(PublishableInterface $data, $event)
     {

@@ -5,8 +5,8 @@ parameters:
 
 services:
     sidus_eav_publishing.doctrine_orm.subscriber:
-        class: %sidus_eav_publishing.doctrine_orm.subscriber.class%
-        arguments: [%kernel.debug%]
+        class: '%sidus_eav_publishing.doctrine_orm.subscriber.class%'
+        arguments: ['%kernel.debug%']
         tags:
             - { name: doctrine.event_subscriber, connection: default }
             - { name: kernel.event_listener, event: kernel.terminate, method: onKernelTerminate }

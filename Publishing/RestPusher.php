@@ -6,6 +6,11 @@ use Circle\RestClientBundle\Services\RestClient;
 use Sidus\PublishingBundle\Exception\PublicationException;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Pusher example using a REST interface to connect to a remote
+ *
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 class RestPusher implements PusherInterface
 {
     /** @var RestClient */
@@ -19,9 +24,10 @@ class RestPusher implements PusherInterface
 
     /**
      * Pusher constructor.
+     *
      * @param RestClient $restClient
-     * @param string $url
-     * @param array $options
+     * @param string     $url
+     * @param array      $options
      */
     public function __construct(RestClient $restClient, $url, array $options)
     {
@@ -47,7 +53,8 @@ class RestPusher implements PusherInterface
     }
 
     /**
-     * @inheritDoc
+     * @param string $publicationUuid
+     * @param mixed  $data
      * @throws PublicationException
      */
     public function create($publicationUuid, $data)
@@ -57,31 +64,33 @@ class RestPusher implements PusherInterface
     }
 
     /**
-     * @inheritDoc
+     * @param string $publicationUuid
+     * @param mixed  $data
      * @throws PublicationException
      */
     public function update($publicationUuid, $data)
     {
-        $url = $this->url . '/' . $publicationUuid;
+        $url = $this->url.'/'.$publicationUuid;
         $response = $this->restClient->put($url, $data, $this->options);
         $this->checkError($response, 'PUT', $url);
     }
 
     /**
-     * @inheritDoc
+     * @param string $publicationUuid
+     * @param mixed  $data
      * @throws PublicationException
      */
     public function delete($publicationUuid, $data)
     {
-        $url = $this->url . '/' . $publicationUuid;
+        $url = $this->url.'/'.$publicationUuid;
         $response = $this->restClient->delete($url, $this->options);
         $this->checkError($response, 'DELETE', $url);
     }
 
     /**
      * @param Response $response
-     * @param string $method
-     * @param string $url
+     * @param string   $method
+     * @param string   $url
      * @throws PublicationException
      */
     protected function checkError(Response $response, $method, $url = null)
@@ -92,6 +101,10 @@ class RestPusher implements PusherInterface
         if (null === $url) {
             $url = $this->url;
         }
-        throw new PublicationException("Failed to send ({$method}) data to {$url}", $response->getStatusCode(), $response);
+        throw new PublicationException(
+            "Failed to send ({$method}) data to {$url}",
+            $response->getStatusCode(),
+            $response
+        );
     }
 }

@@ -6,6 +6,9 @@ use Sidus\PublishingBundle\DependencyInjection\Compiler\GenericCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
+/**
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 class SidusPublishingBundle extends Bundle
 {
     /**
@@ -18,6 +21,7 @@ class SidusPublishingBundle extends Bundle
         $container->addCompilerPass(new GenericCompilerPass(
             'sidus_eav_publishing.doctrine_orm.subscriber',
             'sidus.publisher',
-            'addPublisher'));
+            'addPublisher'
+        ));
     }
 }

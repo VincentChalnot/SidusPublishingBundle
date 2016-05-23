@@ -8,6 +8,11 @@ use Doctrine\ORM\Events;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 use Sidus\PublishingBundle\Publishing\PublisherInterface;
 
+/**
+ * Listen to Doctrine lifecycle events to trigger publication of entities
+ *
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 class ORMSubscriber implements EventSubscriber
 {
     /** @var PublisherInterface[] */
@@ -30,12 +35,15 @@ class ORMSubscriber implements EventSubscriber
         $this->debug = $debug;
     }
 
-
+    /**
+     * @return array
+     */
     public function getSubscribedEvents()
     {
         if ($this->disabled) {
             return [];
         }
+
         return [
             Events::postPersist,
             Events::postUpdate,

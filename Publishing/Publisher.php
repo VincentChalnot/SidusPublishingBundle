@@ -11,6 +11,11 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use UnexpectedValueException;
 
+/**
+ * This class handle the publication of entities through configured pushers
+ *
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 class Publisher implements PublisherInterface
 {
     /** @var string */
@@ -41,12 +46,12 @@ class Publisher implements PublisherInterface
     protected $enabled;
 
     /**
-     * @param string $code
-     * @param string $entityName
-     * @param string $format
+     * @param string              $code
+     * @param string              $entityName
+     * @param string              $format
      * @param SerializerInterface $serializer
-     * @param PusherInterface[] $pushers
-     * @param array $options
+     * @param PusherInterface[]   $pushers
+     * @param array               $options
      * @throws UnexpectedValueException
      */
     public function __construct(
@@ -96,23 +101,12 @@ class Publisher implements PublisherInterface
 
     /**
      * @param PublishableInterface $entity
+     * @throws AccessDeniedException
+     * @throws FileException
      */
     public function delete(PublishableInterface $entity)
     {
         $this->handlePublication($entity, PublicationEvent::DELETE);
-    }
-
-    protected function handlePublication(PublishableInterface $entity, $eventName)
-    {
-        if (!$this->enabled) {
-            return;
-        }
-        $event = new $this->publicationEventClass($entity, $eventName);
-        $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
-        $f = $this->getFileName($event);
-        if (false === file_put_contents($f, $serialized)) {
-            throw new FileException("Unable to write to file {$f}");
-        }
     }
 
     /**
@@ -129,13 +123,15 @@ class Publisher implements PublisherInterface
             /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
             $files = $finder
                 ->in($this->getBaseDirectory($eventType))
-                ->name('*.' . $this->format)
+                ->name('*.'.$this->format)
                 ->sortByModifiedTime()
                 ->files();
+
             foreach ($files as $file) {
+                $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
+                $errorFilePath = "{$this->getBaseDirectory('error')}/{$publicationUuid}.{$this->getFormat()}";
+
                 foreach ($this->getPushers() as $pusher) {
-                    $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
-                    $errorFilePath = "{$this->getBaseDirectory('error')}/{$publicationUuid}.{$this->getFormat()}";
                     try {
                         $pusher->$eventType($publicationUuid, $file->getContents());
                     } catch (PublicationException $e) {
@@ -146,18 +142,20 @@ class Publisher implements PublisherInterface
                             throw $e;
                         }
                     }
-                    unlink($file->getRealPath());
-                    if (file_exists($errorFilePath)) {
-                        unlink($errorFilePath);
-                    }
+                }
+
+                unlink($file->getRealPath());
+                if (file_exists($errorFilePath)) {
+                    unlink($errorFilePath);
                 }
             }
         }
+
         return true;
     }
 
     /**
-     * @param $entity
+     * @param mixed $entity
      * @return bool
      */
     public function isSupported($entity)
@@ -214,6 +212,27 @@ class Publisher implements PublisherInterface
     }
 
     /**
+     * @param PublishableInterface $entity
+     * @param string               $eventName
+     * @throws AccessDeniedException
+     * @throws FileException
+     */
+    protected function handlePublication(PublishableInterface $entity, $eventName)
+    {
+        if (!$this->enabled) {
+            return;
+        }
+        $class = $this->publicationEventClass;
+        $event = new $class($entity, $eventName);
+
+        $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
+        $f = $this->getFileName($event);
+        if (false === file_put_contents($f, $serialized)) {
+            throw new FileException("Unable to write to file {$f}");
+        }
+    }
+
+    /**
      * @param PublicationEvent $event
      * @return string
      * @throws AccessDeniedException
@@ -232,11 +251,12 @@ class Publisher implements PublisherInterface
     {
         $directory = rtrim($this->queueDirectory, '/').'/'.$this->getCode();
         if ($eventType) {
-            $directory .= '/' . $eventType;
+            $directory .= '/'.$eventType;
         }
         if (!@mkdir($directory, 0777, true) && !is_dir($directory)) {
             throw new AccessDeniedException("Unable to create base directory {$directory}");
         }
+
         return $directory;
     }
 }

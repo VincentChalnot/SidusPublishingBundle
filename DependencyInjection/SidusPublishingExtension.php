@@ -22,7 +22,7 @@ class SidusPublishingExtension extends Extension
     protected $globalConfiguration;
 
     /**
-     * @param array $configs
+     * @param array            $configs
      * @param ContainerBuilder $container
      * @throws \Exception
      */
@@ -42,8 +42,8 @@ class SidusPublishingExtension extends Extension
     }
 
     /**
-     * @param string $code
-     * @param array $publisherConfiguration
+     * @param string           $code
+     * @param array            $publisherConfiguration
      * @param ContainerBuilder $container
      * @throws BadMethodCallException
      */
@@ -74,6 +74,7 @@ class SidusPublishingExtension extends Extension
 
     /**
      * Allows the configuration class to be different in inherited classes
+     *
      * @return Configuration
      */
     protected function createConfigurationParser()

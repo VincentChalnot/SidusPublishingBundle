@@ -2,9 +2,13 @@
 
 namespace Sidus\PublishingBundle\Publishing;
 
-
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 
+/**
+ * Interface for custom publishers
+ *
+ * @author Vincent Chalnot <vincent@sidus.fr>
+ */
 interface PublisherInterface
 {
     /**
