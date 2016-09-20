@@ -9,12 +9,8 @@ use Sidus\PublishingBundle\Entity\PublishableInterface;
  *
  * @author Vincent Chalnot <vincent@sidus.fr>
  */
-class PublicationEvent
+class PublicationEvent implements PublicationEventInterface
 {
-    const CREATE = 'create';
-    const UPDATE = 'update';
-    const DELETE = 'delete';
-
     /** @var PublishableInterface */
     public $data;
 
@@ -25,8 +21,17 @@ class PublicationEvent
     public $publicationUuid;
 
     /**
-     * PublicationEvent constructor.
+     * @param PublishableInterface $data
+     * @param string               $event
      *
+     * @return PublicationEvent
+     */
+    public static function build(PublishableInterface $data, $event)
+    {
+        return new self($data, $event);
+    }
+
+    /**
      * @param PublishableInterface $data
      * @param string               $event
      */

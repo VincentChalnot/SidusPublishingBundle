@@ -4,7 +4,7 @@ namespace Sidus\PublishingBundle\Publishing;
 
 use JMS\Serializer\SerializerInterface;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
-use Sidus\PublishingBundle\Event\PublicationEvent;
+use Sidus\PublishingBundle\Event\PublicationEventInterface;
 use Sidus\PublishingBundle\Exception\PublicationException;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\Finder\Finder;
@@ -52,6 +52,7 @@ class Publisher implements PublisherInterface
      * @param SerializerInterface $serializer
      * @param PusherInterface[]   $pushers
      * @param array               $options
+     *
      * @throws UnexpectedValueException
      */
     public function __construct(
@@ -81,32 +82,35 @@ class Publisher implements PublisherInterface
 
     /**
      * @param PublishableInterface $entity
+     *
      * @throws FileException
      * @throws AccessDeniedException
      */
     public function create(PublishableInterface $entity)
     {
-        $this->handlePublication($entity, PublicationEvent::CREATE);
+        $this->handlePublication($entity, PublicationEventInterface::CREATE);
     }
 
     /**
      * @param PublishableInterface $entity
+     *
      * @throws FileException
      * @throws AccessDeniedException
      */
     public function update(PublishableInterface $entity)
     {
-        $this->handlePublication($entity, PublicationEvent::UPDATE);
+        $this->handlePublication($entity, PublicationEventInterface::UPDATE);
     }
 
     /**
      * @param PublishableInterface $entity
+     *
      * @throws AccessDeniedException
      * @throws FileException
      */
     public function delete(PublishableInterface $entity)
     {
-        $this->handlePublication($entity, PublicationEvent::DELETE);
+        $this->handlePublication($entity, PublicationEventInterface::DELETE);
     }
 
     /**
@@ -118,7 +122,13 @@ class Publisher implements PublisherInterface
         if (!$this->enabled) {
             return false;
         }
-        foreach ([PublicationEvent::CREATE, PublicationEvent::UPDATE, PublicationEvent::DELETE] as $eventType) {
+        $eventTypes = [
+            PublicationEventInterface::CREATE,
+            PublicationEventInterface::UPDATE,
+            PublicationEventInterface::DELETE,
+        ];
+
+        foreach ($eventTypes as $eventType) {
             $finder = new Finder();
             /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
             $files = $finder
@@ -156,6 +166,7 @@ class Publisher implements PublisherInterface
 
     /**
      * @param mixed $entity
+     *
      * @return bool
      */
     public function isSupported($entity)
@@ -214,7 +225,9 @@ class Publisher implements PublisherInterface
     /**
      * @param PublishableInterface $entity
      * @param string               $eventName
+     *
      * @throws AccessDeniedException
+     *
      * @throws FileException
      */
     protected function handlePublication(PublishableInterface $entity, $eventName)
@@ -226,26 +239,31 @@ class Publisher implements PublisherInterface
         $event = new $class($entity, $eventName);
 
         $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
-        $f = $this->getFileName($event);
+        $f = $this->getFileName($eventName, $entity->getPublicationUuid());
         if (false === file_put_contents($f, $serialized)) {
             throw new FileException("Unable to write to file {$f}");
         }
     }
 
     /**
-     * @param PublicationEvent $event
-     * @return string
+     * @param string $eventName
+     * @param string $publicationUuid
+     *
      * @throws AccessDeniedException
+     *
+     * @return string
      */
-    protected function getFileName(PublicationEvent $event)
+    protected function getFileName($eventName, $publicationUuid)
     {
-        return "{$this->getBaseDirectory($event->event)}/{$event->publicationUuid}.{$this->getFormat()}";
+        return "{$this->getBaseDirectory($eventName)}/{$publicationUuid}.{$this->getFormat()}";
     }
 
     /**
      * @param string $eventType
-     * @return string
+     *
      * @throws AccessDeniedException
+     *
+     * @return string
      */
     protected function getBaseDirectory($eventType = null)
     {
