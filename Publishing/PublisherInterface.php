@@ -27,9 +27,11 @@ interface PublisherInterface
     public function delete(PublishableInterface $entity);
 
     /**
+     * @param bool $crashOnError
+     *
      * @return bool
      */
-    public function publish();
+    public function publish($crashOnError = false);
 
     /**
      * @param PublishableInterface $entity

@@ -3,11 +3,13 @@
 namespace Sidus\PublishingBundle\Publishing;
 
 use JMS\Serializer\SerializerInterface;
+use Psr\Log\LoggerInterface;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 use Sidus\PublishingBundle\Event\PublicationEventInterface;
 use Sidus\PublishingBundle\Exception\PublicationException;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use UnexpectedValueException;
 
@@ -30,6 +32,9 @@ class Publisher implements PublisherInterface
     /** @var SerializerInterface */
     protected $serializer;
 
+    /** @var LoggerInterface */
+    protected $logger;
+
     /** @var PusherInterface[] */
     protected $pushers;
 
@@ -50,6 +55,7 @@ class Publisher implements PublisherInterface
      * @param string              $entityName
      * @param string              $format
      * @param SerializerInterface $serializer
+     * @param LoggerInterface     $logger
      * @param PusherInterface[]   $pushers
      * @param array               $options
      *
@@ -60,6 +66,7 @@ class Publisher implements PublisherInterface
         $entityName,
         $format,
         SerializerInterface $serializer,
+        LoggerInterface $logger,
         array $pushers,
         array $options = []
     ) {
@@ -67,6 +74,7 @@ class Publisher implements PublisherInterface
         $this->entityName = $entityName;
         $this->format = $format;
         $this->serializer = $serializer;
+        $this->logger = $logger;
         $this->pushers = $pushers;
         $this->options = $options;
         if (!isset($options['queue']['base_directory'])) {
@@ -114,23 +122,24 @@ class Publisher implements PublisherInterface
     }
 
     /**
+     * @param bool $crashOnError
+     *
+     * @throws AccessDeniedException
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
+     * @throws PublicationException
+     *
      * @return bool
-     * @throws \Exception
      */
-    public function publish()
+    public function publish($crashOnError = false)
     {
         if (!$this->enabled) {
             return false;
         }
-        $eventTypes = [
-            PublicationEventInterface::CREATE,
-            PublicationEventInterface::UPDATE,
-            PublicationEventInterface::DELETE,
-        ];
 
-        foreach ($eventTypes as $eventType) {
+        foreach ($this->getEventTypes() as $eventType) {
             $finder = new Finder();
-            /** @var \Symfony\Component\Finder\SplFileInfo[] $files */
+            /** @var SplFileInfo[] $files */
             $files = $finder
                 ->in($this->getBaseDirectory($eventType))
                 ->name('*.'.$this->format)
@@ -138,26 +147,7 @@ class Publisher implements PublisherInterface
                 ->files();
 
             foreach ($files as $file) {
-                $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
-                $errorFilePath = "{$this->getBaseDirectory('error')}/{$publicationUuid}.{$this->getFormat()}";
-
-                foreach ($this->getPushers() as $pusher) {
-                    try {
-                        $pusher->$eventType($publicationUuid, $file->getContents());
-                    } catch (PublicationException $e) {
-                        $r = $e->getResponse();
-                        if ($r && $r->getContent()) {
-                            file_put_contents($errorFilePath, $r->getContent());
-                            $e->addMessage("Check {$errorFilePath} for more informations");
-                            throw $e;
-                        }
-                    }
-                }
-
-                unlink($file->getRealPath());
-                if (file_exists($errorFilePath)) {
-                    unlink($errorFilePath);
-                }
+                $this->publishFile($file, $eventType, $crashOnError);
             }
         }
 
@@ -276,5 +266,82 @@ class Publisher implements PublisherInterface
         }
 
         return $directory;
+    }
+
+    /**
+     * @param string $eventType
+     *
+     * @throws AccessDeniedException
+     *
+     * @return string
+     */
+    protected function getErrorDirectory($eventType = null)
+    {
+        $directory = $this->getBaseDirectory().'/error';
+        if ($eventType) {
+            $directory .= '/'.$eventType;
+        }
+        if (!@mkdir($directory, 0777, true) && !is_dir($directory)) {
+            throw new AccessDeniedException("Unable to create error directory {$directory}");
+        }
+
+        return $directory;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getEventTypes()
+    {
+        return [
+            PublicationEventInterface::CREATE,
+            PublicationEventInterface::UPDATE,
+            PublicationEventInterface::DELETE,
+        ];
+    }
+
+    /**
+     * @param SplFileInfo $file
+     * @param string      $eventType
+     * @param bool        $crashOnError
+     *
+     * @throws PublicationException
+     * @throws AccessDeniedException
+     * @throws \RuntimeException
+     */
+    protected function publishFile(SplFileInfo $file, $eventType, $crashOnError = false)
+    {
+        $publicationUuid = substr($file->getBasename(), 0, -strlen($this->getFormat()) - 1);
+        $errorFilePath = "{$this->getErrorDirectory($eventType)}/{$publicationUuid}.{$this->getFormat()}";
+
+        $hasError = false;
+        foreach ($this->getPushers() as $pusher) {
+            try {
+                $pusher->$eventType($publicationUuid, $file->getContents());
+            } catch (PublicationException $e) {
+                $r = $e->getResponse();
+                if ($r && $r->getContent()) {
+                    file_put_contents($errorFilePath, $r->getContent());
+                    $e->addMessage("Check {$errorFilePath} for more information");
+
+                    if ($crashOnError) {
+                        throw $e;
+                    } else {
+                        $this->logger->error($e->getMessage(), [
+                            'eventType' => $eventType,
+                            'publicationUUid' => $publicationUuid,
+                        ]);
+                        $hasError = true;
+                    }
+                }
+            }
+        }
+
+        if (!$hasError) {
+            unlink($file->getRealPath());
+            if (file_exists($errorFilePath)) {
+                unlink($errorFilePath);
+            }
+        }
     }
 }
