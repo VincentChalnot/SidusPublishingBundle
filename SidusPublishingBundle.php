@@ -18,10 +18,12 @@ class SidusPublishingBundle extends Bundle
      */
     public function build(ContainerBuilder $container)
     {
-        $container->addCompilerPass(new GenericCompilerPass(
-            'sidus_eav_publishing.doctrine_orm.subscriber',
-            'sidus.publisher',
-            'addPublisher'
-        ));
+        $container->addCompilerPass(
+            new GenericCompilerPass(
+                'sidus_eav_publishing.doctrine_orm.subscriber',
+                'sidus.publisher',
+                'addPublisher'
+            )
+        );
     }
 }

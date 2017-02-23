@@ -55,6 +55,7 @@ class RestPusher implements PusherInterface
     /**
      * @param string $publicationUuid
      * @param mixed  $data
+     *
      * @throws PublicationException
      */
     public function create($publicationUuid, $data)
@@ -66,6 +67,7 @@ class RestPusher implements PusherInterface
     /**
      * @param string $publicationUuid
      * @param mixed  $data
+     *
      * @throws PublicationException
      */
     public function update($publicationUuid, $data)
@@ -78,6 +80,7 @@ class RestPusher implements PusherInterface
     /**
      * @param string $publicationUuid
      * @param mixed  $data
+     *
      * @throws PublicationException
      */
     public function delete($publicationUuid, $data)
@@ -91,6 +94,7 @@ class RestPusher implements PusherInterface
      * @param Response $response
      * @param string   $method
      * @param string   $url
+     *
      * @throws PublicationException
      */
     protected function checkError(Response $response, $method, $url = null)

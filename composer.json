@@ -17,10 +17,9 @@
             "role": "Developer"
         }
     ],
-    "target-dir": "Sidus/PublishingBundle",
     "autoload": {
-        "psr-0": {
-            "Sidus\\PublishingBundle": ""
+        "psr-4": {
+            "Sidus\\PublishingBundle\\": ""
         }
     },
     "require": {

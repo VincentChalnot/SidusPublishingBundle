@@ -24,6 +24,7 @@ class SidusPublishingExtension extends Extension
     /**
      * @param array            $configs
      * @param ContainerBuilder $container
+     *
      * @throws \Exception
      */
     public function load(array $configs, ContainerBuilder $container)
@@ -45,6 +46,7 @@ class SidusPublishingExtension extends Extension
      * @param string           $code
      * @param array            $publisherConfiguration
      * @param ContainerBuilder $container
+     *
      * @throws BadMethodCallException
      */
     protected function createPublisherService($code, array $publisherConfiguration, ContainerBuilder $container)
@@ -59,14 +61,16 @@ class SidusPublishingExtension extends Extension
         foreach ($publisherConfiguration['pushers'] as $pusher) {
             $pushers[] = new Reference(ltrim($pusher, '@'));
         }
-        $definition = new Definition(new Parameter('sidus_eav_publishing.publisher.default.class'), [
+        $definition = new Definition(
+            new Parameter('sidus_eav_publishing.publisher.default.class'), [
             $code,
             $publisherConfiguration['entity'],
             $publisherConfiguration['format'],
             $publisherConfiguration['serializer'],
             $pushers,
             $options,
-        ]);
+        ]
+        );
         $definition->addTag('sidus.publisher');
         $sId = 'sidus_eav_publishing.publisher.'.$code;
         $container->setDefinition($sId, $definition);

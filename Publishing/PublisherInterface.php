@@ -33,6 +33,7 @@ interface PublisherInterface
 
     /**
      * @param PublishableInterface $entity
+     *
      * @return bool
      */
     public function isSupported($entity);

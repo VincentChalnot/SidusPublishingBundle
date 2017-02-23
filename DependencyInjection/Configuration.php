@@ -12,7 +12,8 @@ use Symfony\Component\DependencyInjection\Reference;
 /**
  * This is the class that validates and merges configuration from your app/config files
  *
- * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html#cookbook-bundles-extension-config-class}
+ * To learn more see {@link
+ * http://symfony.com/doc/current/cookbook/bundles/extension.html#cookbook-bundles-extension-config-class}
  */
 class Configuration implements ConfigurationInterface
 {
@@ -37,7 +38,8 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
             ->booleanNode('enabled')->defaultTrue()->end()
-            ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end()
+            ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end(
+            )
             ->append($this->getQueueTreeBuilder())
             ->append($this->getPublishersTreeBuilder())
             ->end();
@@ -54,6 +56,7 @@ class Configuration implements ConfigurationInterface
         $builder = new TreeBuilder();
         $node = $builder->root('queue');
         $node
+            ->isRequired()
             ->children()
             ->scalarNode('base_directory')->isRequired()->end()
             ->integerNode('override_timeout')->defaultValue(120)->end()
