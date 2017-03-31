@@ -62,14 +62,15 @@ class SidusPublishingExtension extends Extension
             $pushers[] = new Reference(ltrim($pusher, '@'));
         }
         $definition = new Definition(
-            new Parameter('sidus_eav_publishing.publisher.default.class'), [
-            $code,
-            $publisherConfiguration['entity'],
-            $publisherConfiguration['format'],
-            $publisherConfiguration['serializer'],
-            $pushers,
-            $options,
-        ]
+            new Parameter('sidus_eav_publishing.publisher.default.class'),
+            [
+                $code,
+                $publisherConfiguration['entity'],
+                $publisherConfiguration['format'],
+                $publisherConfiguration['serializer'],
+                $pushers,
+                $options,
+            ]
         );
         $definition->addTag('sidus.publisher');
         $sId = 'sidus_eav_publishing.publisher.'.$code;
