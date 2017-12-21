@@ -8,6 +8,7 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\DependencyInjection\Parameter;
 use Symfony\Component\DependencyInjection\Reference;
+use Sidus\PublishingBundle\Event\PublicationEvent;
 
 /**
  * This is the class that validates and merges configuration from your app/config files
@@ -38,8 +39,7 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
             ->booleanNode('enabled')->defaultTrue()->end()
-            ->scalarNode('publication_event_class')->defaultValue('Sidus\PublishingBundle\Event\PublicationEvent')->end(
-            )
+            ->scalarNode('publication_event_class')->defaultValue(PublicationEvent::class)->end()
             ->append($this->getQueueTreeBuilder())
             ->append($this->getPublishersTreeBuilder())
             ->end();

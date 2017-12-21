@@ -67,11 +67,12 @@ class SidusPublishingExtension extends Extension
                 $code,
                 $publisherConfiguration['entity'],
                 $publisherConfiguration['format'],
-                $publisherConfiguration['serializer'],
+                new Reference('service_container'), // Fix me ! (circular reference nightmare)
                 $pushers,
                 $options,
             ]
         );
+        $definition->setPublic(false);
         $definition->addTag('sidus.publisher');
         $sId = 'sidus_eav_publishing.publisher.'.$code;
         $container->setDefinition($sId, $definition);

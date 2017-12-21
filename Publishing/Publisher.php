@@ -2,7 +2,7 @@
 
 namespace Sidus\PublishingBundle\Publishing;
 
-use JMS\Serializer\SerializerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Sidus\PublishingBundle\Entity\PublishableInterface;
 use Sidus\PublishingBundle\Event\PublicationEventInterface;
 use Sidus\PublishingBundle\Exception\PublicationException;
@@ -27,9 +27,6 @@ class Publisher implements PublisherInterface
     /** @var string */
     protected $format;
 
-    /** @var SerializerInterface */
-    protected $serializer;
-
     /** @var PusherInterface[] */
     protected $pushers;
 
@@ -45,13 +42,16 @@ class Publisher implements PublisherInterface
     /** @var bool */
     protected $enabled;
 
+    /** @var ContainerInterface */
+    protected $container;
+
     /**
-     * @param string              $code
-     * @param string              $entityName
-     * @param string              $format
-     * @param SerializerInterface $serializer
-     * @param PusherInterface[]   $pushers
-     * @param array               $options
+     * @param string             $code
+     * @param string             $entityName
+     * @param string             $format
+     * @param ContainerInterface $container
+     * @param PusherInterface[]  $pushers
+     * @param array              $options
      *
      * @throws UnexpectedValueException
      */
@@ -59,14 +59,14 @@ class Publisher implements PublisherInterface
         $code,
         $entityName,
         $format,
-        SerializerInterface $serializer,
+        ContainerInterface $container,
         array $pushers,
         array $options = []
     ) {
         $this->code = $code;
         $this->entityName = $entityName;
         $this->format = $format;
-        $this->serializer = $serializer;
+        $this->container = $container;
         $this->pushers = $pushers;
         $this->options = $options;
         if (!isset($options['queue']['base_directory'])) {
@@ -83,6 +83,11 @@ class Publisher implements PublisherInterface
     /**
      * @param PublishableInterface $entity
      *
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\Serializer\Exception\LogicException
+     * @throws \Symfony\Component\Serializer\Exception\InvalidArgumentException
+     * @throws \Symfony\Component\Serializer\Exception\CircularReferenceException
      * @throws FileException
      * @throws AccessDeniedException
      */
@@ -94,6 +99,11 @@ class Publisher implements PublisherInterface
     /**
      * @param PublishableInterface $entity
      *
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\Serializer\Exception\LogicException
+     * @throws \Symfony\Component\Serializer\Exception\InvalidArgumentException
+     * @throws \Symfony\Component\Serializer\Exception\CircularReferenceException
      * @throws FileException
      * @throws AccessDeniedException
      */
@@ -105,6 +115,11 @@ class Publisher implements PublisherInterface
     /**
      * @param PublishableInterface $entity
      *
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\Serializer\Exception\LogicException
+     * @throws \Symfony\Component\Serializer\Exception\InvalidArgumentException
+     * @throws \Symfony\Component\Serializer\Exception\CircularReferenceException
      * @throws AccessDeniedException
      * @throws FileException
      */
@@ -138,13 +153,13 @@ class Publisher implements PublisherInterface
                 ->files();
 
             foreach ($files as $file) {
-                $publicationUuid = substr($file->getBasename(), 0, -strlen($this->format) - 1);
+                $publicationUuid = substr($file->getBasename(), 0, -\strlen($this->format) - 1);
                 $errorFilePath = "{$this->getBaseDirectory('error')}/{$publicationUuid}.{$this->getFormat()}";
 
                 foreach ($this->getPushers() as $pusher) {
                     try {
                         $pusher->$eventType($publicationUuid, $file->getContents());
-                    } catch (PublicationException $e) {
+                    } /** @noinspection PhpRedundantCatchClauseInspection */ catch (PublicationException $e) {
                         $r = $e->getResponse();
                         if ($r && $r->getContent()) {
                             file_put_contents($errorFilePath, $r->getContent());
@@ -199,14 +214,6 @@ class Publisher implements PublisherInterface
     }
 
     /**
-     * @return SerializerInterface
-     */
-    public function getSerializer()
-    {
-        return $this->serializer;
-    }
-
-    /**
      * @return PusherInterface[]
      */
     public function getPushers()
@@ -226,6 +233,11 @@ class Publisher implements PublisherInterface
      * @param PublishableInterface $entity
      * @param string               $eventName
      *
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
+     * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
+     * @throws \Symfony\Component\Serializer\Exception\LogicException
+     * @throws \Symfony\Component\Serializer\Exception\InvalidArgumentException
+     * @throws \Symfony\Component\Serializer\Exception\CircularReferenceException
      * @throws AccessDeniedException
      *
      * @throws FileException
@@ -238,7 +250,7 @@ class Publisher implements PublisherInterface
         $class = $this->publicationEventClass;
         $event = new $class($entity, $eventName);
 
-        $serialized = $this->getSerializer()->serialize($event, $this->getFormat());
+        $serialized = $this->container->get('serializer')->serialize($event, $this->getFormat());
         $f = $this->getFileName($eventName, $entity->getPublicationUuid());
         if (false === file_put_contents($f, $serialized)) {
             throw new FileException("Unable to write to file {$f}");
